@@ -77,6 +77,7 @@ class RecurrentNetwork(nn.Module):
         output = output.view(-1, self.vocab_size) # (seq_len * batch_size, vocab_size)
         tokens = target.view(-1) # (seq_len * batch_size)
 
+        # != is broadcastable
         mask = (tokens != padding_value).float()
 
         # Ignoring the padding value, we get the number of total chars of this batch
