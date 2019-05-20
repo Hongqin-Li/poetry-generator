@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.nn.utils import clip_grad_norm
 from torch.autograd import Variable
 
-from batched_train import model, vocab, provider
+from custom_train import model, vocab, provider
 
 num_epochs = 1
 
