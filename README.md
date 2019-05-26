@@ -15,6 +15,8 @@
 └── README.md
 ```
 
+Detailed report can be found in [docs](https://github.com/lihongqinzhuanyong/poetry-generator/tree/master/docs)
+
 Dependency: Pytorch
 
 ## Usage
@@ -35,8 +37,6 @@ Run
 ```bash
 python3 run.py
 ```
-
-
 
 ### Custom LSTM
 
