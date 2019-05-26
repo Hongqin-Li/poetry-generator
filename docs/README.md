@@ -146,30 +146,23 @@ $$
 Thus by chain rule we have,
 $$
 \begin{align}
-	
-	
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{c}_{t-1}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_{t}} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{c}_{t-1}} \\
-	
 	\\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{W}_{o}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \mathbf{o}_{t}} \cdot \frac{\partial \mathbf{o}_t}{\partial \mathbf{y}_o} \cdot \frac{\partial\mathbf{y}_o}{\partial\mathbf{W}_o} \\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{b}_{o}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \mathbf{o}_{t}} \cdot \frac{\partial \mathbf{o}_t}{\partial \mathbf{y}_o} \cdot \frac{\partial\mathbf{y}_o}{\partial\mathbf{b}_o} \\
-	
 	\\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{W}_{i}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{i}_t} \cdot \frac{\partial\mathbf{i}_t}{\partial\mathbf{y}_i} \cdot \frac{\partial\mathbf{y}_i}{\partial\mathbf{W}_i} \\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{b}_{i}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{i}_t} \cdot \frac{\partial\mathbf{i}_t}{\partial\mathbf{y}_i} \cdot \frac{\partial\mathbf{y}_i}{\partial\mathbf{b}_i} \\
-	\\
-	
-	
+	\\	
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{W}_{f}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{f}_t} \cdot \frac{\partial\mathbf{f}_t}{\partial\mathbf{y}_f} \cdot \frac{\partial\mathbf{y}_f}{\partial\mathbf{W}_f} \\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{b}_{f}} &
-	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{f}_t} \cdot \frac{\partial\mathbf{f}_t}{\partial\mathbf{y}_f} \cdot \frac{\partial\mathbf{y}_f}{\partial\mathbf{b}_f} \\
-	
+	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{f}_t} \cdot \frac{\partial\mathbf{f}_t}{\partial\mathbf{y}_f} \cdot \frac{\partial\mathbf{y}_f}{\partial\mathbf{b}_f} \\	
 	\\
 	\frac{\partial \mathbf{h}_t}{\partial \mathbf{W}_{g}} &
 	= \frac{\partial \mathbf{h}_t}{\partial \tanh\mathbf{c}_{t}} \cdot \frac{\partial \tanh\mathbf{c}_t}{\partial \mathbf{c}_t} \cdot \frac{\partial\mathbf{c}_t}{\partial\mathbf{g}_t} \cdot \frac{\partial\mathbf{g}_t}{\partial\mathbf{y}_g} \cdot \frac{\partial\mathbf{y}_g}{\partial\mathbf{W}_g} \\
