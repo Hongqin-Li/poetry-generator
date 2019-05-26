@@ -35,8 +35,8 @@ $$
 \begin{bmatrix}
 \mathbf I_{h\times h} & \mathbf0_{h\times f}\\
 \mathbf0_{f\times h} & \mathbf0_{f\times f}\\
-\end{bmatrix}\\
-
+\end{bmatrix}
+\\
 \frac{\partial \mathbf{z}}{\partial \mathbf{x}_{t}} &=
 \begin{bmatrix}
 \mathbf0_{h\times h} & \mathbf0_{h\times f}\\
@@ -57,11 +57,10 @@ $$
 = \frac{\partial \mathbf{y}_o}{\partial [\mathbf{W}_o]_{ij}}
 &=
 \begin{bmatrix}
-\delta_{1i} \mathbf{z}_j \\
-\vdots \\
-\delta_{ni} \mathbf{z}_j \\
+	\delta_{1i} \mathbf{z}_j \\
+	\vdots \\
+	\delta_{ni} \mathbf{z}_j \\
 \end{bmatrix} \\
-
 
 \frac{\partial \mathbf{y}_f}{\partial \mathbf{b}_f} 
 = \frac{\partial \mathbf{y}_i}{\partial \mathbf{b}_i}
@@ -75,67 +74,55 @@ $$
 \frac{\partial c_t}{\partial c_{t-1} }
 &=
 \begin{bmatrix}
-{\mathbf{f}_t}_1 & &\\
-& \ddots &\\
-& & {\mathbf{f}_t}_n 
+	{\mathbf{f}_t}_1 & &\\
+	& \ddots &\\
+	& & {\mathbf{f}_t}_n 
 \end{bmatrix}\\
 
 \end{align}
 $$
-
 
 Internal (non-leave) nodes:
 $$
 \begin{align}
 
 
-\frac{\partial \sigma(\mathbf{y}) }{\partial \mathbf{y}} &
-=
-\begin{bmatrix}
-\mathbf{y}_1 (1-\mathbf{y}_1) & & \\
-& \ddots & \\
-& & \mathbf{y}_n (1-\mathbf{y}_n) \\
-\end{bmatrix} , \mathbf{y}\in \{\mathbf{y}_i, \mathbf{y}_f, \mathbf{y}_o\}\\
-
-
-\frac{\partial \tanh(\mathbf{y}) }{\partial \mathbf{y}} &
-= 
-\begin{bmatrix}
-1-\tanh^2(\mathbf{y}_1) & &\\
-& \ddots &\\
-& & 1-\tanh^2(\mathbf{y}_n)\\
-\end{bmatrix} \\
-
-
-
-
-\frac{\partial \mathbf{c}_t}{\partial \mathbf{i}_t}
-&=
-\begin{bmatrix}
-{\mathbf{g}_t}_1 &&\\
-& \ddots &\\
-& & {\mathbf{g}_t}_n
-\end{bmatrix}
+\frac{\partial \sigma(\mathbf{y}) }{\partial \mathbf{y}} &=
+	\begin{bmatrix}
+	\mathbf{y}_1 (1-\mathbf{y}_1) & & \\
+	& \ddots & \\
+	& & \mathbf{y}_n (1-\mathbf{y}_n) \\
+	\end{bmatrix} , \mathbf{y}\in \{\mathbf{y}_i, \mathbf{y}_f, \mathbf{y}_o\}
 \\
-
-\frac{\partial \mathbf{c}_t}{\partial \mathbf{g}_t}
-&=
-\begin{bmatrix}
-{\mathbf{i}_t}_1 &&\\
-& \ddots &\\
-& & {\mathbf{i}_t}_n
-\end{bmatrix} \\
-
-\frac{\partial \mathbf{c}_t}{\partial \mathbf{f}_t}
-&=
-\begin{bmatrix}
-[\mathbf{c}_{t-1}]_1 &&\\
-& \ddots &\\
-& & [\mathbf{c}_{t-1}]_n
-\end{bmatrix} 
+\frac{\partial \tanh(\mathbf{y}) }{\partial \mathbf{y}} &= 
+	\begin{bmatrix}
+	1-\tanh^2(\mathbf{y}_1) & &\\
+	& \ddots &\\
+	& & 1-\tanh^2(\mathbf{y}_n)\\
+	\end{bmatrix}
+\\
+\frac{\partial \mathbf{c}_t}{\partial \mathbf{i}_t} &=
+	\begin{bmatrix}
+	{\mathbf{g}_t}_1 &&\\
+	& \ddots &\\
+	& & {\mathbf{g}_t}_n
+	\end{bmatrix}
+\\
+\frac{\partial \mathbf{c}_t}{\partial \mathbf{g}_t} &=
+	\begin{bmatrix}
+	{\mathbf{i}_t}_1 &&\\
+	& \ddots &\\
+	& & {\mathbf{i}_t}_n
+	\end{bmatrix}
+\\
+\frac{\partial \mathbf{c}_t}{\partial \mathbf{f}_t} &=
+	\begin{bmatrix}
+	[\mathbf{c}_{t-1}]_1 &&\\
+	& \ddots &\\
+	& & [\mathbf{c}_{t-1}]_n
+	\end{bmatrix} 
 \end{align}
 $$
-
 
 Root nodes:
 $$
@@ -155,7 +142,6 @@ $$
 \end{bmatrix} \\
 \end{align}
 $$
-
 
 Thus by chain rule we have,
 $$
@@ -224,6 +210,8 @@ $$
    You can check out my calculation above.
 
 2. Describe how can you differentiate through time for the training of an LSTM language model for sentence $s_1,s_2,\cdots, s_n$. 10%
+
+   
    $$
    \begin{align}
    \nabla\mathbf{h}_t = & \frac{\partial \mathbf h_t}{\partial \mathbf i_t} \cdot \nabla{\mathbf i_t} + \frac{\partial \mathbf h_t}{\partial \mathbf f_t}\nabla{\mathbf f_t} + \frac{\partial \mathbf h_t}{\partial \mathbf g_t}\nabla{\mathbf g_t} +  \frac{\partial \mathbf h_t}{\partial \mathbf o_t}\nabla{\mathbf o_t}\\
@@ -237,7 +225,7 @@ $$
    & + \frac{\partial \mathbf c_t}{\partial \mathbf c_{t-1}}\nabla{\mathbf c_{t-1}}, t=1, ..., n
    \end{align}
    $$
-   
+
 
 
 
