@@ -1,6 +1,9 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.init as init
+
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
@@ -43,6 +46,15 @@ class RecurrentNetwork(nn.Module):
         self.linear = nn.Linear(hidden_size, target_size)
 
         self.softmax = nn.LogSoftmax(dim=2)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1.0 / math.sqrt(self.hidden_size)
+        for name, weight in self.named_parameters():
+            if name != 'rnn.cell.bias_hh':
+                init.uniform_(weight, -stdv, stdv)
+            # print (name, weight)
+            # input ()
 
 
     def init_hidden(self, batch_size):
@@ -54,21 +66,14 @@ class RecurrentNetwork(nn.Module):
 
         return hidden
 
-
-    def forward(self, padded_input, input_lengths):
+    def forward(self, padded_input, hidden_state):
         # input:(seq_len, batch_size)
-
-        seq_len, batch_size = padded_input.size()
-        # print ('seq_len: {}, batch_size: {}'.format(seq_len, batch_size))
 
         padded_embed = self.embed(padded_input)
         # shape: (seq_len, batch_size, embedding_dim)
-        # print ('embed: ', padded_embed.shape)
         
-        padded_out, _ = self.rnn(padded_embed, self.hidden)
-
+        padded_out, hidden_state = self.rnn(padded_embed, hidden_state)
         # shape: (seq_len, batch_size, hidden_size)
-        # print ('unpacked: ', padded_out.shape)
 
         linear_out = self.linear(padded_out)
         # shape: (seq_len, batch_size, vocab_size)
@@ -76,7 +81,7 @@ class RecurrentNetwork(nn.Module):
         output = self.softmax(linear_out)
         # shape: (seq_len, batch_size, vocab_size)
 
-        return output 
+        return output, hidden_state
 
     
     def loss(self, output, target, padding_value):
@@ -98,6 +103,9 @@ class RecurrentNetwork(nn.Module):
 
         cross_entropy_loss = - torch.sum(picked_values) / num_valid_tokens
         return cross_entropy_loss
+
+    def perplexity(self, output, target, padding_value):
+        return torch.exp(self.loss(output, target, padding_value))
         
         
 

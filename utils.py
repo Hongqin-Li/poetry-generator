@@ -12,7 +12,6 @@ BEGIN = '<BOS>'
 END = '<EOS>'
 UNKNOWN = '<OOV>'
 
-
 tag_list = [BEGIN, END, UNKNOWN]
 
 def json2poems(path):
@@ -34,24 +33,13 @@ def jsons2poems(paths):
         poems += json2poems(p) 
     return poems
 
-def poems2vocab(poems, vocab=None):
-    # poems: [string, ...]
-
-    if vocab is None:
-        vocab = Vocabulary(unknown=UNKNOWN)
-    vocab.update(tag_list)
-
-    for p in poems:
-        words = [c for c in p]
-        vocab.update(words)
-
-    return vocab
 
 def poem2data(poem, vocab):
     # poem type: string, shape: (number of chars)
-    # return: ([int, ...], [int, ...]) 
+    # return: (LongTensor(int, ...), LongTensor(int, ...) 
 
-    token = torch.LongTensor([vocab[BEGIN]] + [vocab[w] for w in poem] + [vocab[END]])
+    # token = torch.LongTensor([vocab[BEGIN]] + [vocab[w] for w in poem] + [vocab[END]])
+    token = torch.LongTensor([vocab[w] for w in poem] + [vocab[END]])
     input_data = token[:-1]
     target_data = token[1:]
     return input_data, target_data
@@ -64,17 +52,9 @@ def poems2data(poems, vocab):
 
     return [poem2data(p, vocab) for p in poems]
 
-def get_vocab_and_dataset():
 
-    poems = jsons2poems(paths)
-    vocab = poems2vocab(poems)
-
-    dataset = [poem2data(p, vocab) for p in poems]
-
-    return vocab, dataset
-
-
-def get_poems(path):
+# Select only len between 40 and 50
+def get_poems(path, min_len=45, max_len=50):
     # :path: str
     # :return: [str, ...]
 
@@ -83,58 +63,41 @@ def get_poems(path):
     for p in data:
         paragraphs = p['paragraphs'] # type: list
         poem = ''.join(paragraphs)
+        if len(poem) > max_len or len(poem) < min_len : continue
         poems.append(poem)
+   
     return poems
 
 def update_vocab(vocab, poems):
     # :poems: [str, ...]
     
-    if vocab is None:
-        vocab = Vocabulary(unknown=UNKNOWN)
-    vocab.update(tag_list)
-
     for p in poems:
+        vocab.update(tag_list)
         words = [c for c in p]
         vocab.update(words)
 
 def get_vocab(paths):
 
-    vocab = Vocabulary()
+    vocab = Vocabulary(min_freq=10)
+
     for path in paths:
         poems = get_poems(path)
         update_vocab(vocab, poems)
+
+    vocab.build_vocab()
 
     return vocab
         
 class DataProvider():
 
-    def __init__(self, files, batch_size=50, padding_value=0):
+    # div is divide dataset into trainset and development set div=0.8 means 80% is trainset
+    def __init__(self, files, batch_size=50, padding_value=0, div=0.8):
         self.files = files
         self.batch_size = batch_size
         self.padding_value = padding_value
         self.vocab = get_vocab(files)
+        self.div = div
         # print (self.vocab)
-
-    def batches(self, shuffle=True):
-
-        for path in self.files:
-
-            dataset = poems2data(get_poems(path), self.vocab)
-            dataset = [(torch.LongTensor(inp), torch.LongTensor(t)) for inp, t in dataset]
-
-            batch_size = self.batch_size
-
-            num_data = len(dataset)
-            num_batch = num_data // batch_size
-
-            if shuffle:
-                random.shuffle(dataset)
-                print ('Shuffle dataset')
-
-            for start in range(0, num_data, batch_size):
-                end = min(num_data, start + batch_size)
-                yield dataset[start: end]
-
 
 
     def padded_batches(self, shuffle=True):
@@ -145,16 +108,24 @@ class DataProvider():
             dataset = poems2data(get_poems(path), self.vocab)
             dataset = [(torch.LongTensor(inp), torch.LongTensor(t)) for inp, t in dataset]
 
+            if shuffle: random.shuffle(dataset)
+
+            # split into devset and trainset
+            pivot = int(self.div * len(dataset))
+            self.devset = dataset[pivot:]
+            dataset = dataset[: pivot]
+            print (f'trainset: {len(dataset)}, devset: {len(self.devset)}')
+
             batch_size = self.batch_size
             num_data = len(dataset)
             num_batch = num_data // batch_size
-            if shuffle: random.shuffle(dataset)
             
             for start in range(0, num_data, batch_size):
 
                 end = min(num_data, start + batch_size)
 
                 sorted_batch = sorted(dataset[start:end], key=lambda t: len(t[0]), reverse=True)
+                # print (sorted_batch[0][0].shape[0]) 
                 sorted_lengths = [len(i) for i, t in sorted_batch]
 
                 input_batch, target_batch = [inp for inp, t in sorted_batch], [t for inp, t in sorted_batch]
@@ -165,56 +136,26 @@ class DataProvider():
                 # print ('padded target batch: ', ptb.shape)
                 yield pib, ptb, sorted_lengths
 
+    # Every file will generate a new devset
+    def devset_batches(self):
 
-class DataProvider1():
-    def __init__(self, dataset, batch_size, padding_value):
-        # input_data(inp): (seq_len)
-        # target_data(t): (seq_len)
-        # data(d): (input_data, target_data)
+        dataset = self.devset
+        # FIXME 
+        batch_size = 1
+        # batch_size = self.batch_size
+        num_data = len(dataset)
+        num_batch = num_data // batch_size
 
-        # dataset(ds): [data, ...]
-        # padding_value: Int
+        for start in range(0, num_data, batch_size):
 
-        print ('Initializing data provider...')
-        
-
-        # Transfrom each input data and target data to tensor-like data 
-        self.dataset = [(torch.LongTensor(inp), torch.LongTensor(t)) for inp, t in dataset]
-
-        self.batch_size = batch_size
-        self.num_data = len(dataset)
-        self.num_batch = self.num_data // batch_size
-        self.padding_value = padding_value
-
-        print ('Dataset len: ', self.num_data)
-        print ('Batch size: ', self.batch_size)
-        print ('Number of batch: ', self.num_batch)
-
-    def shuffle(self):
-        random.shuffle(self.dataset)
-
-
-
-    def padded_batches(self, shuffle=True):
-        # return: ([max_seq_len, batch_size], [max_seq_len, batch_size])
-
-        if shuffle:
-            random.shuffle(self.dataset)
-            print ('Shuffle dataset')
-
-        for batch_idx in range(self.num_batch):
-            start = batch_idx * self.batch_size
-            end = min(self.num_data, (batch_idx + 1) * self.batch_size)
-
-            sorted_batch = sorted(self.dataset[start:end], key=lambda t: len(t[0]), reverse=True)
+            end = min(num_data, start + batch_size)
+            sorted_batch = sorted(dataset[start:end], key=lambda t: len(t[0]), reverse=True)
             sorted_lengths = [len(i) for i, t in sorted_batch]
 
             input_batch, target_batch = [inp for inp, t in sorted_batch], [t for inp, t in sorted_batch]
 
             pib, ptb = pad_sequence(input_batch, padding_value=self.padding_value), pad_sequence(target_batch, padding_value=self.padding_value)
 
-            # print ('padded input batch: ', pib.shape)
-            # print ('padded target batch: ', ptb.shape)
             yield pib, ptb, sorted_lengths
 
 if __name__ == '__main__':
@@ -222,13 +163,6 @@ if __name__ == '__main__':
     files = ['raw_data/poet.tang.0.json']
 
     provider = DataProvider(files, batch_size=50, padding_value=0)
-
-    for batch in provider.batches():
-        print (len(batch))
-        for inp, target in batch:
-            print (inp.shape)
-            print (target.shape)
-        input()
 
 
     for input_batch, target_batch, sorted_lengths in provider.padded_batches():

@@ -23,10 +23,10 @@ class RecurrentNetwork(nn.Module):
         # self.embed = nn.Linear(vocab_size, embedding_dim)
 
         self.rnn = nn.LSTM(embedding_dim,
-                           hidden_size//2,
+                           hidden_size,
                            num_layers=num_layers,
                            bias=True,
-                           bidirectional=True,
+                           bidirectional=False,
                            # dropout=0.7,
                            batch_first=batch_first)
         self.linear = nn.Linear(hidden_size, target_size)
@@ -35,13 +35,13 @@ class RecurrentNetwork(nn.Module):
 
 
     def init_hidden(self, batch_size):
-        hidden = (Variable(torch.zeros((2, batch_size, self.hidden_size // 2))), Variable(torch.zeros((2, batch_size, self.hidden_size // 2))))
+        hidden = (Variable(torch.zeros((self.num_layers, batch_size, self.hidden_size))), Variable(torch.zeros((self.num_layers, batch_size, self.hidden_size))))
         self.hidden = hidden
         return hidden
 
 
     def forward(self, padded_input, input_lengths):
-        # input:(seq_len, batch_size)
+        # input: (seq_len, batch_size)
 
         seq_len, batch_size = padded_input.size()
         # print ('seq_len: {}, batch_size: {}'.format(seq_len, batch_size))
@@ -54,7 +54,7 @@ class RecurrentNetwork(nn.Module):
                                          input_lengths,
                                          batch_first=self.batch_first)
         
-        packed_out, _ = self.rnn(packed_in, self.hidden)
+        packed_out, self.hidden = self.rnn(packed_in, self.hidden)
 
         padded_out, _ = pad_packed_sequence(packed_out,
                                          batch_first=self.batch_first,
@@ -68,7 +68,7 @@ class RecurrentNetwork(nn.Module):
         output = self.softmax(linear_out)
         # shape: (seq_len, batch_size, vocab_size)
 
-        return output 
+        return output, self.hidden
 
     
     def loss(self, output, target, padding_value):
@@ -92,4 +92,8 @@ class RecurrentNetwork(nn.Module):
         return cross_entropy_loss
         
         
+    def perplexity(self, output, target, padding_value):
+        return torch.exp(self.loss(output, target, padding_value))
+        
+
 

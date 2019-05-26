@@ -27,12 +27,22 @@ class LSTMCell(nn.Module):
         super(LSTMCell, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
+
         # Parameter Wrapper: enable autograd and add to the parameter list of this module, which can be refered as parameters()
         self.weight_ih = Parameter(torch.randn(4 * hidden_size, input_size))
         self.weight_hh = Parameter(torch.randn(4 * hidden_size, hidden_size))
+
         self.bias_ih = Parameter(torch.randn(4 * hidden_size))
         self.bias_hh = Parameter(torch.randn(4 * hidden_size))
-        self.reset_parameters()
+        # Initialize biases for LSTM’s forget gate to 1 to remember more by default.
+        # self.reset_parameters()
+
+        self.bias_ih[hidden_size: 2 * hidden_size] = 0
+        self.bias_hh[hidden_size: 2 * hidden_size] = 1
+
+        self.bias_ih = Parameter(self.bias_ih)
+        self.bias_hh = Parameter(self.bias_hh)
+
 
     # Do matters!
     def reset_parameters(self):
@@ -43,12 +53,18 @@ class LSTMCell(nn.Module):
     def forward(self, input, state):
         '''
         type: (Tensor, Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tuple[Tensor, Tensor]]
-        :input: (batch_size, feature)
+        :input: (batch_size, input_size)
         :state: ((batch_size, hidden_size), (batch_size, hidden_size))
         '''
         hx, cx = state
 
         # '+' is broadcastable, while torch.mm not
+        '''
+        [   Wi 
+            Wf       * z + b 
+            Wg 
+            Wo  ]
+        '''
         gates = (torch.mm(input, self.weight_ih.t()) + self.bias_ih +
                  torch.mm(hx, self.weight_hh.t()) + self.bias_hh)
         # Thus gates is of shape (batch_size, 4 * hidden_size)
@@ -111,8 +127,17 @@ class LSTMLayer(nn.Module):
         seq_size = len(inputs)
         for i in range(seq_size):
             # All i-th character in batches 
+            # print (state[0].shape, state[1].shape)
             out, state = self.cell(inputs[i], state)
+
+            # TODO Mermory efficient
+            # out, state = self.cell(inputs[i][: batch_size], state[: batch_size])
+            # That's why we need sorted sequence 
+
             outputs += [out]
+
+        #TODO Right? 
+        state = state[0].unsqueeze(0), state[1].unsqueeze(0)
         # torch.stack(seq, dim=0, out=None) -> Tensor : Concatenates sequence of tensors along a new dimension.
         # At this point, it just turn List into Tensor
         # I.e. torch.stack(outputs) is of shape (seq_size, batch_size, feature), which is the same as input

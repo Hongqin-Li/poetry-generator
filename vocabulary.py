@@ -192,3 +192,4 @@ class Vocabulary(object):
         """
         self.__dict__.update(state)
         self.build_reverse_vocab()
+
